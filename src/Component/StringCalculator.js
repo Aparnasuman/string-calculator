@@ -1,85 +1,58 @@
-function parseTextAreaInput(input) {
-  if (!input || input.trim() === "") {
-    return null;
-  }
+// StringCalculator.js
 
-  const trimmedInput = input.trim();
+export function add(input) {
+  if (typeof input !== "string") return 0;
 
-  function processEscapeSequences(str) {
-    return str
+  if (input.trim() === "") return 0;
+
+  // Handle escaped string
+  if (input.startsWith('"') && input.endsWith('"')) {
+    input = input.slice(1, -1);
+    input = input
       .replace(/\\n/g, "\n")
       .replace(/\\t/g, "\t")
       .replace(/\\r/g, "\r")
       .replace(/\\b/g, "\b")
-      .replace(/\\f/g, "\f")
-      .replace(/\\v/g, "\v")
-      .replace(/\\0/g, "\0")
-      .replace(/\\\\/g, "\\")
-      .replace(/\\'/g, "'")
-      .replace(/\\"/g, '"')
-      .replace(/\\x([0-9A-Fa-f]{2})/g, (match, hex) => {
-        return String.fromCharCode(parseInt(hex, 16));
-      })
-      .replace(/\\u([0-9A-Fa-f]{4})/g, (match, hex) => {
-        return String.fromCharCode(parseInt(hex, 16));
-      });
+      .replace(/\\u[0-9a-fA-F]{4}/g, (match) =>
+        String.fromCharCode(parseInt(match.replace("\\u", ""), 16))
+      );
   }
 
-  if (trimmedInput.startsWith('"') && trimmedInput.endsWith('"')) {
-    const unquoted = trimmedInput.slice(1, -1);
-    return processEscapeSequences(unquoted);
-  } else {
-    const num = Number(trimmedInput);
-
-    if (!isNaN(num) && trimmedInput !== "") {
-      return num;
-    }
-
-    return processEscapeSequences(trimmedInput);
-  }
-}
-
-function sumNumbers(numberStrings) {
-  console.log(numberStrings);
-  return numberStrings.reduce((sum, numStr) => {
-    const trimmed = numStr.trim();
-
-    const num = parseFloat(trimmed);
-
-    if (!isNaN(num)) {
-      return sum + num;
-    }
-
-    return sum;
-  }, 0);
-}
-
-export function add(input) {
-  if (!input || typeof input !== "string") {
-    return 0;
-  }
-  input = parseTextAreaInput(input);
-  console.log(`input is ${input}`);
+  let delimiterRegex = /,|\n/; // default delimiter
 
   if (input.startsWith("//")) {
     const newlineIndex = input.indexOf("\n");
+    if (newlineIndex === -1) throw new Error("Invalid custom delimiter format");
 
-    if (newlineIndex === -1) {
-      return 0;
+    const delimiterLine = input.substring(2, newlineIndex);
+    input = input.substring(newlineIndex + 1);
+
+    // Support multiple delimiters
+    const delimiterMatches = delimiterLine.matchAll(/\[(.*?)\]/g);
+    const delimiters = Array.from(delimiterMatches, (m) => m[1]);
+
+    if (delimiters.length > 0) {
+      delimiterRegex = new RegExp(
+        delimiters.map((d) => escapeRegex(d)).join("|")
+      );
+    } else {
+      delimiterRegex = new RegExp(escapeRegex(delimiterLine));
     }
-
-    const delimiter = input.substring(2, newlineIndex);
-
-    const numbersString = input.substring(newlineIndex + 1);
-
-    return sumNumbers(numbersString.split(delimiter));
-  } else {
-    const normalizedInput = input.replace(/\+/g, ",");
-
-    return sumNumbers(normalizedInput.split(","));
   }
+
+  const numberStrings = input.split(delimiterRegex);
+  const numbers = numberStrings
+    .map((num) => parseInt(num))
+    .filter((n) => !isNaN(n));
+
+  const negatives = numbers.filter((n) => n < 0);
+  if (negatives.length > 0) {
+    throw new Error(`negative numbers not allowed: ${negatives.join(",")}`);
+  }
+
+  return numbers.reduce((acc, val) => acc + val, 0);
 }
 
-function escapeRegex(s) {
-  return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
