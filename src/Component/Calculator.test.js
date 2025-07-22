@@ -2,15 +2,17 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import Calculator from "./Calculator";
 
+const getDisplay = () => screen.getByTestId("display");
+
 test("initial display shows 0", () => {
   render(<Calculator />);
-  expect(screen.getByText("0")).toBeInTheDocument();
+  expect(getDisplay().textContent).toBe("0");
 });
 
 test("clicking a digit displays that digit", () => {
   render(<Calculator />);
   fireEvent.click(screen.getByText("5"));
-  expect(screen.getByText("5")).toBeInTheDocument();
+  expect(getDisplay().textContent).toBe("5");
 });
 
 test("performs addition: 1 + 2 = 3", () => {
@@ -19,7 +21,7 @@ test("performs addition: 1 + 2 = 3", () => {
   fireEvent.click(screen.getByText("+"));
   fireEvent.click(screen.getByText("2"));
   fireEvent.click(screen.getByText("="));
-  expect(screen.getByText("3")).toBeInTheDocument();
+  expect(getDisplay().textContent).toBe("3");
 });
 
 test("division by zero shows Error", () => {
@@ -28,12 +30,12 @@ test("division by zero shows Error", () => {
   fireEvent.click(screen.getByText("/"));
   fireEvent.click(screen.getByText("0"));
   fireEvent.click(screen.getByText("="));
-  expect(screen.getByText("Error")).toBeInTheDocument();
+  expect(getDisplay().textContent).toBe("Error");
 });
 
 test("clear button resets display to 0", () => {
   render(<Calculator />);
   fireEvent.click(screen.getByText("9"));
   fireEvent.click(screen.getByText("C"));
-  expect(screen.getByText("0")).toBeInTheDocument();
+  expect(getDisplay().textContent).toBe("0");
 });

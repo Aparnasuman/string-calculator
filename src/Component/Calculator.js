@@ -53,7 +53,7 @@ function Calculator() {
     }
 
     setWaiting(true);
-    setOperator(nextOp);
+    setOperator(nextOp === "=" ? null : nextOp);
   };
 
   const clearAll = () => {
@@ -65,7 +65,10 @@ function Calculator() {
 
   return (
     <div className="calculator">
-      <div className="display">{display}</div>
+      <div className="display" data-testid="display">
+        {display}
+      </div>
+
       <div className="buttons">
         {[
           "7",
