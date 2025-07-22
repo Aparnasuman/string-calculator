@@ -1,37 +1,36 @@
 export function stringAdd(input) {
-  if (!input || input.trim() === "") return 0;
+  if (!input) return 0;
 
-  let delimiter = /,|\n/;
+  let delimiters = [",", "\n"];
   let numbers = input;
 
+  // Check for custom delimiter syntax
   if (input.startsWith("//")) {
-    const parts = input.split("\n");
-    const delimiterLine = parts[0];
-    numbers = parts.slice(1).join("\n");
+    const delimiterSection = input.match(/^\/\/(.+)\n/)[1];
+    numbers = input.split("\n").slice(1).join("\n");
 
-    // Match custom delimiter format
-    const delimiterMatch = delimiterLine.match(/\/\/(\[.*?\]|.)/g);
-
-    if (delimiterMatch) {
-      const delimiters = delimiterMatch.map((d) => d.replace(/\/|\[|\]/g, ""));
-      delimiter = new RegExp(delimiters.map((d) => escapeRegExp(d)).join("|"));
+    // Multiple custom delimiters (e.g. //[***][%%])
+    if (delimiterSection.includes("[")) {
+      const matches = delimiterSection.match(/\[([^\]]+)\]/g);
+      delimiters = matches.map((d) => d.slice(1, -1)); // remove brackets
+    } else {
+      // Single-character delimiter (e.g. //;\n)
+      delimiters = [delimiterSection];
     }
   }
 
-  const tokens = numbers.split(delimiter).filter((n) => n.trim() !== "");
-  const negatives = tokens.filter((n) => parseFloat(n) < 0);
+  // Escape special characters in delimiters
+  const escapedDelimiters = delimiters.map((d) =>
+    d.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  );
 
+  const splitRegex = new RegExp(escapedDelimiters.join("|"), "g");
+  const tokens = numbers.split(splitRegex).filter(Boolean);
+
+  const negatives = tokens.filter((n) => parseInt(n) < 0);
   if (negatives.length > 0) {
-    throw new Error("Negatives not allowed: " + negatives.join(", "));
+    throw new Error(`Negatives not allowed: ${negatives.join(", ")}`);
   }
 
-  return tokens.reduce((sum, val) => {
-    let num = parseFloat(val);
-    if (!isNaN(num)) sum += num;
-    return sum;
-  }, 0);
-}
-
-function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return tokens.reduce((sum, n) => sum + parseInt(n || 0, 10), 0);
 }
