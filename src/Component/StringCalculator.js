@@ -1,11 +1,9 @@
-// StringCalculator.js
-
 export function add(input) {
   if (typeof input !== "string") return 0;
 
-  if (input.trim() === "") return 0;
+  input = input.trim();
+  if (input === "") return 0;
 
-  // Handle escaped string
   if (input.startsWith('"') && input.endsWith('"')) {
     input = input.slice(1, -1);
     input = input
@@ -13,30 +11,35 @@ export function add(input) {
       .replace(/\\t/g, "\t")
       .replace(/\\r/g, "\r")
       .replace(/\\b/g, "\b")
-      .replace(/\\u[0-9a-fA-F]{4}/g, (match) =>
-        String.fromCharCode(parseInt(match.replace("\\u", ""), 16))
+      .replace(/\\x([0-9a-fA-F]{2})/g, (_, hex) =>
+        String.fromCharCode(parseInt(hex, 16))
+      )
+      .replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) =>
+        String.fromCharCode(parseInt(hex, 16))
       );
   }
 
-  let delimiterRegex = /,|\n/; // default delimiter
+  let delimiterRegex = /,|\n|\+/;
 
   if (input.startsWith("//")) {
     const newlineIndex = input.indexOf("\n");
-    if (newlineIndex === -1) throw new Error("Invalid custom delimiter format");
+    if (newlineIndex === -1) {
+      return 0;
+    }
 
     const delimiterLine = input.substring(2, newlineIndex);
     input = input.substring(newlineIndex + 1);
 
-    // Support multiple delimiters
     const delimiterMatches = delimiterLine.matchAll(/\[(.*?)\]/g);
     const delimiters = Array.from(delimiterMatches, (m) => m[1]);
 
     if (delimiters.length > 0) {
       delimiterRegex = new RegExp(
-        delimiters.map((d) => escapeRegex(d)).join("|")
+        delimiters.map((d) => escapeRegex(d)).join("|"),
+        "g"
       );
     } else {
-      delimiterRegex = new RegExp(escapeRegex(delimiterLine));
+      delimiterRegex = new RegExp(escapeRegex(delimiterLine), "g");
     }
   }
 
