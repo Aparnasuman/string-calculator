@@ -40,6 +40,22 @@ describe("String Calculator", () => {
     expect(add("1,hello,3")).toBe(4);
   });
 
+  test("supports zero as input", () => {
+    expect(add("0,0,0")).toBe(0);
+  });
+
+  test("handles negative numbers", () => {
+    expect(add("-1,-2,3")).toBe(0);
+  });
+
+  test("handles input with unicode escape \\u0031", () => {
+    expect(add('"\\u0031"')).toBe(1);
+  });
+
+  test("handles hex escape \\x32", () => {
+    expect(add('"\\x32"')).toBe(2);
+  });
+
   test("parses escaped newline and adds correctly", () => {
     expect(add('"1\\n2,3"')).toBe(6);
   });
