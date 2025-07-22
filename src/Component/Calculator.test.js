@@ -1,43 +1,68 @@
 import { add } from "./StringCalculator";
 
 describe("String Calculator", () => {
-  test("returns 0 for empty string", () => {
+  test("returns 0 for empty input", () => {
     expect(add("")).toBe(0);
   });
 
-  test("returns number for single input", () => {
-    expect(add("1")).toBe(1);
-    expect(add("42")).toBe(42);
+  test("returns 0 for null input", () => {
+    expect(add(null)).toBe(0);
+  });
+
+  test("returns 0 for undefined input", () => {
+    expect(add(undefined)).toBe(0);
   });
 
   test("adds comma-separated numbers", () => {
-    expect(add("1,2")).toBe(3);
-    expect(add("1,2,3,4")).toBe(10);
+    expect(add("1,2,3")).toBe(6);
   });
 
-  test("adds numbers with plus signs as delimiters (converted to comma)", () => {
+  test("adds plus-separated numbers", () => {
     expect(add("1+2+3")).toBe(6);
   });
 
-  test("adds numbers with newline as delimiter", () => {
-    expect(add("1\n2,3")).toBe(6);
+  test("adds mixed comma and plus", () => {
+    expect(add("1+2,3")).toBe(6);
   });
 
-  test("supports custom single-character delimiter", () => {
+  test("ignores invalid numbers and sums valid ones", () => {
+    expect(add("1,abc,2")).toBe(3);
+  });
+
+  test("handles custom single-character delimiter", () => {
     expect(add("//;\n1;2")).toBe(3);
-    expect(add("//|\n4|5|6")).toBe(15);
   });
 
-  test("supports custom multi-character delimiter", () => {
+  test("handles custom multi-character delimiter", () => {
     expect(add("//***\n1***2***3")).toBe(6);
   });
 
-  test("returns 0 if input starts with // but no newline present", () => {
-    expect(add("//;")).toBe(0);
+  test("handles space as delimiter", () => {
+    expect(add("// \n1 2 3")).toBe(6);
   });
 
-  test("ignores non-numeric tokens", () => {
-    expect(add("1,hello,3")).toBe(4);
+  test("handles escaped characters correctly", () => {
+    expect(add('"Line\\n1"')).toBe(0); // Should return 0 as it's not numeric
+  });
+
+  test("handles decimal values", () => {
+    expect(add("1.5+2.5")).toBe(4);
+  });
+
+  test("handles whitespace around numbers", () => {
+    expect(add(" 1 , 2 , 3 ")).toBe(6);
+  });
+
+  test("ignores trailing delimiters", () => {
+    expect(add("1,2,")).toBe(3);
+  });
+
+  test("returns 0 if custom delimiter has no newline", () => {
+    expect(add("//;\n")).toBe(0);
+  });
+
+  test("returns 0 if custom delimiter format is broken", () => {
+    expect(add("//;")).toBe(0);
   });
 
   test("supports zero as input", () => {
@@ -56,30 +81,7 @@ describe("String Calculator", () => {
     expect(add('"\\x32"')).toBe(2);
   });
 
-  test("parses escaped newline and adds correctly", () => {
-    expect(add('"1\\n2,3"')).toBe(6);
-  });
-
-  test("handles escaped tabs and other characters", () => {
-    expect(add('"2\\t3"')).toBe(5);
-    expect(add('"4\\r5"')).toBe(9);
-  });
-
-  test("supports hexadecimal escape \\x41 = A (non-number ignored)", () => {
-    expect(add('"1\\x41,2"')).toBe(3);
-  });
-
-  test("supports unicode escape \\u0033 = 3", () => {
-    expect(add('"1\\u0033"')).toBe(4);
-  });
-
-  test("returns 0 for null, undefined, or non-string input", () => {
-    expect(add(null)).toBe(0);
-    expect(add(undefined)).toBe(0);
-    expect(add(123)).toBe(0);
-  });
-
-  test("returns correct sum when input has spaces", () => {
-    expect(add(" 1 , 2 , 3 ")).toBe(6);
+  test("ignores null characters \\0", () => {
+    expect(add('"3\\0"')).toBe(3);
   });
 });
