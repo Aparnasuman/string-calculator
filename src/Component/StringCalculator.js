@@ -1,40 +1,85 @@
-// StringCalculator.js
-export function add(numbers) {
-  if (!numbers) return 0;
+function parseTextAreaInput(input) {
+  if (!input || input.trim() === "") {
+    return null;
+  }
 
-  let delimiter = /,|\n/; // default delimiter: comma or newline
-  let numberString = numbers;
+  const trimmedInput = input.trim();
 
-  // Custom delimiter syntax
-  if (numbers.startsWith("//")) {
-    const match = numbers.match(/^\/\/(.+)\n(.*)$/);
-    if (match) {
-      const custom = match[1];
-      numberString = match[2];
+  function processEscapeSequences(str) {
+    return str
+      .replace(/\\n/g, "\n")
+      .replace(/\\t/g, "\t")
+      .replace(/\\r/g, "\r")
+      .replace(/\\b/g, "\b")
+      .replace(/\\f/g, "\f")
+      .replace(/\\v/g, "\v")
+      .replace(/\\0/g, "\0")
+      .replace(/\\\\/g, "\\")
+      .replace(/\\'/g, "'")
+      .replace(/\\"/g, '"')
+      .replace(/\\x([0-9A-Fa-f]{2})/g, (match, hex) => {
+        return String.fromCharCode(parseInt(hex, 16));
+      })
+      .replace(/\\u([0-9A-Fa-f]{4})/g, (match, hex) => {
+        return String.fromCharCode(parseInt(hex, 16));
+      });
+  }
 
-      // Multiple delimiters: //[***][%]
-      const multiDelims = [...custom.matchAll(/\[([^\]]+)\]/g)].map(
-        (m) => m[1]
-      );
+  if (trimmedInput.startsWith('"') && trimmedInput.endsWith('"')) {
+    const unquoted = trimmedInput.slice(1, -1);
+    return processEscapeSequences(unquoted);
+  } else {
+    const num = Number(trimmedInput);
 
-      if (multiDelims.length > 0) {
-        delimiter = new RegExp(multiDelims.map(escapeRegExp).join("|"), "g");
-      } else {
-        delimiter = new RegExp(escapeRegExp(custom), "g");
-      }
+    if (!isNaN(num) && trimmedInput !== "") {
+      return num;
     }
+
+    return processEscapeSequences(trimmedInput);
   }
-
-  const tokens = numberString.split(delimiter).filter(Boolean);
-  const negatives = tokens.filter((n) => parseInt(n) < 0);
-
-  if (negatives.length > 0) {
-    throw new Error(`negative numbers not allowed: ${negatives.join(", ")}`);
-  }
-
-  return tokens.reduce((sum, n) => sum + parseInt(n || 0, 10), 0);
 }
 
-function escapeRegExp(str) {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+function sumNumbers(numberStrings) {
+  console.log(numberStrings);
+  return numberStrings.reduce((sum, numStr) => {
+    const trimmed = numStr.trim();
+
+    const num = parseFloat(trimmed);
+
+    if (!isNaN(num)) {
+      return sum + num;
+    }
+
+    return sum;
+  }, 0);
+}
+
+export function add(input) {
+  if (!input || typeof input !== "string") {
+    return 0;
+  }
+  input = parseTextAreaInput(input);
+  console.log(`input is ${input}`);
+
+  if (input.startsWith("//")) {
+    const newlineIndex = input.indexOf("\n");
+
+    if (newlineIndex === -1) {
+      return 0;
+    }
+
+    const delimiter = input.substring(2, newlineIndex);
+
+    const numbersString = input.substring(newlineIndex + 1);
+
+    return sumNumbers(numbersString.split(delimiter));
+  } else {
+    const normalizedInput = input.replace(/\+/g, ",");
+
+    return sumNumbers(normalizedInput.split(","));
+  }
+}
+
+function escapeRegex(s) {
+  return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
 }
