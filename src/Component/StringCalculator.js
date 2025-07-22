@@ -1,31 +1,26 @@
 export function add(input) {
   if (typeof input !== "string") return 0;
 
-  input = input.trim();
-  if (input === "") return 0;
+  if (input.trim() === "") return 0;
 
   if (input.startsWith('"') && input.endsWith('"')) {
     input = input.slice(1, -1);
+
     input = input
       .replace(/\\n/g, "\n")
       .replace(/\\t/g, "\t")
       .replace(/\\r/g, "\r")
       .replace(/\\b/g, "\b")
-      .replace(/\\x([0-9a-fA-F]{2})/g, (_, hex) =>
-        String.fromCharCode(parseInt(hex, 16))
-      )
-      .replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) =>
-        String.fromCharCode(parseInt(hex, 16))
+      .replace(/\\u[0-9a-fA-F]{4}/g, (match) =>
+        String.fromCharCode(parseInt(match.slice(2), 16))
       );
   }
 
-  let delimiterRegex = /,|\n|\+/;
+  let delimiterRegex = /,|\n/;
 
   if (input.startsWith("//")) {
     const newlineIndex = input.indexOf("\n");
-    if (newlineIndex === -1) {
-      return 0;
-    }
+    if (newlineIndex === -1) return 0;
 
     const delimiterLine = input.substring(2, newlineIndex);
     input = input.substring(newlineIndex + 1);
@@ -35,13 +30,14 @@ export function add(input) {
 
     if (delimiters.length > 0) {
       delimiterRegex = new RegExp(
-        delimiters.map((d) => escapeRegex(d)).join("|"),
-        "g"
+        delimiters.map((d) => escapeRegex(d)).join("|")
       );
     } else {
-      delimiterRegex = new RegExp(escapeRegex(delimiterLine), "g");
+      delimiterRegex = new RegExp(escapeRegex(delimiterLine));
     }
   }
+
+  delimiterRegex = new RegExp(delimiterRegex.source + "|\\t|\\r|\\b", "g");
 
   const numberStrings = input.split(delimiterRegex);
   const numbers = numberStrings
