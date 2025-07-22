@@ -1,41 +1,43 @@
-import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
-import Calculator from "./Calculator";
+import { stringAdd } from "./StringCalculator";
 
-const getDisplay = () => screen.getByTestId("display");
+describe("String Calculator", () => {
+  test("returns 0 for empty string", () => {
+    expect(stringAdd("")).toBe(0);
+  });
 
-test("initial display shows 0", () => {
-  render(<Calculator />);
-  expect(getDisplay().textContent).toBe("0");
-});
+  test("returns number for single input", () => {
+    expect(stringAdd("5")).toBe(5);
+  });
 
-test("clicking a digit displays that digit", () => {
-  render(<Calculator />);
-  fireEvent.click(screen.getByText("5"));
-  expect(getDisplay().textContent).toBe("5");
-});
+  test("adds comma-separated numbers", () => {
+    expect(stringAdd("1,2,3")).toBe(6);
+  });
 
-test("performs addition: 1 + 2 = 3", () => {
-  render(<Calculator />);
-  fireEvent.click(screen.getByText("1"));
-  fireEvent.click(screen.getByText("+"));
-  fireEvent.click(screen.getByText("2"));
-  fireEvent.click(screen.getByText("="));
-  expect(getDisplay().textContent).toBe("3");
-});
+  test("supports new line as delimiter", () => {
+    expect(stringAdd("1\n2,3")).toBe(6);
+  });
 
-test("division by zero shows Error", () => {
-  render(<Calculator />);
-  fireEvent.click(screen.getByText("7"));
-  fireEvent.click(screen.getByText("/"));
-  fireEvent.click(screen.getByText("0"));
-  fireEvent.click(screen.getByText("="));
-  expect(getDisplay().textContent).toBe("Error");
-});
+  test("supports custom single-character delimiter", () => {
+    expect(stringAdd("//;\n1;2")).toBe(3);
+  });
 
-test("clear button resets display to 0", () => {
-  render(<Calculator />);
-  fireEvent.click(screen.getByText("9"));
-  fireEvent.click(screen.getByText("C"));
-  expect(getDisplay().textContent).toBe("0");
+  test("throws error for negative numbers", () => {
+    expect(() => stringAdd("1,-2,3")).toThrow("Negatives not allowed: -2");
+  });
+
+  test("supports custom delimiter of any length", () => {
+    expect(stringAdd("//[***]\n1***2***3")).toBe(6);
+  });
+
+  test("supports multiple custom delimiters", () => {
+    expect(stringAdd("//[*][%]\n1*2%3")).toBe(6);
+  });
+
+  test("ignores non-numeric and blank tokens", () => {
+    expect(stringAdd("1,,2")).toBe(3);
+  });
+
+  test("handles custom delimiters with special regex characters", () => {
+    expect(stringAdd("//[.*+?^${}()|[]\\]\n1.*+?^${}()|[]\\2")).toBe(3);
+  });
 });
