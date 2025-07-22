@@ -25,7 +25,6 @@ body {
 
 .string-calculator textarea {
   width: 100%;
-  padding: 1rem;
   border: none;
   border-radius: 12px;
   background: #e0e5ec;

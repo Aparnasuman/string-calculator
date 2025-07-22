@@ -1,36 +1,40 @@
-export function stringAdd(input) {
-  if (!input) return 0;
+// StringCalculator.js
+export function add(numbers) {
+  if (!numbers) return 0;
 
-  let delimiters = [",", "\n"];
-  let numbers = input;
+  let delimiter = /,|\n/; // default delimiter: comma or newline
+  let numberString = numbers;
 
-  // Check for custom delimiter syntax
-  if (input.startsWith("//")) {
-    const delimiterSection = input.match(/^\/\/(.+)\n/)[1];
-    numbers = input.split("\n").slice(1).join("\n");
+  // Custom delimiter syntax
+  if (numbers.startsWith("//")) {
+    const match = numbers.match(/^\/\/(.+)\n(.*)$/);
+    if (match) {
+      const custom = match[1];
+      numberString = match[2];
 
-    // Multiple custom delimiters (e.g. //[***][%%])
-    if (delimiterSection.includes("[")) {
-      const matches = delimiterSection.match(/\[([^\]]+)\]/g);
-      delimiters = matches.map((d) => d.slice(1, -1)); // remove brackets
-    } else {
-      // Single-character delimiter (e.g. //;\n)
-      delimiters = [delimiterSection];
+      // Multiple delimiters: //[***][%]
+      const multiDelims = [...custom.matchAll(/\[([^\]]+)\]/g)].map(
+        (m) => m[1]
+      );
+
+      if (multiDelims.length > 0) {
+        delimiter = new RegExp(multiDelims.map(escapeRegExp).join("|"), "g");
+      } else {
+        delimiter = new RegExp(escapeRegExp(custom), "g");
+      }
     }
   }
 
-  // Escape special characters in delimiters
-  const escapedDelimiters = delimiters.map((d) =>
-    d.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-  );
-
-  const splitRegex = new RegExp(escapedDelimiters.join("|"), "g");
-  const tokens = numbers.split(splitRegex).filter(Boolean);
-
+  const tokens = numberString.split(delimiter).filter(Boolean);
   const negatives = tokens.filter((n) => parseInt(n) < 0);
+
   if (negatives.length > 0) {
-    throw new Error(`Negatives not allowed: ${negatives.join(", ")}`);
+    throw new Error(`negative numbers not allowed: ${negatives.join(", ")}`);
   }
 
   return tokens.reduce((sum, n) => sum + parseInt(n || 0, 10), 0);
+}
+
+function escapeRegExp(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

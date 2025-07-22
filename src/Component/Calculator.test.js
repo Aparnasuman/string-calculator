@@ -1,43 +1,53 @@
-import { stringAdd } from "./StringCalculator";
+import { add } from "./StringCalculator";
 
 describe("String Calculator", () => {
   test("returns 0 for empty string", () => {
-    expect(stringAdd("")).toBe(0);
+    expect(add("")).toBe(0);
   });
 
   test("returns number for single input", () => {
-    expect(stringAdd("5")).toBe(5);
+    expect(add("1")).toBe(1);
   });
 
-  test("adds comma-separated numbers", () => {
-    expect(stringAdd("1,2,3")).toBe(6);
+  test("adds two numbers", () => {
+    expect(add("1,5")).toBe(6);
   });
 
-  test("supports new line as delimiter", () => {
-    expect(stringAdd("1\n2,3")).toBe(6);
+  test("adds multiple numbers", () => {
+    expect(add("1,2,3,4")).toBe(10);
   });
 
-  test("supports custom single-character delimiter", () => {
-    expect(stringAdd("//;\n1;2")).toBe(3);
+  test("supports newline as delimiter", () => {
+    expect(add("1\n2,3")).toBe(6);
   });
 
-  test("throws error for negative numbers", () => {
-    expect(() => stringAdd("1,-2,3")).toThrow("Negatives not allowed: -2");
+  test("supports custom delimiter ;", () => {
+    expect(add("//;\n1;2")).toBe(3);
   });
 
-  test("supports custom delimiter of any length", () => {
-    expect(stringAdd("//[***]\n1***2***3")).toBe(6);
+  test("throws error for single negative number", () => {
+    expect(() => add("1,-2,3")).toThrow("negative numbers not allowed: -2");
+  });
+
+  test("throws error for multiple negative numbers", () => {
+    expect(() => add("1,-2,-5,3")).toThrow(
+      "negative numbers not allowed: -2, -5"
+    );
+  });
+
+  test("supports long custom delimiter", () => {
+    expect(add("//[***]\n1***2***3")).toBe(6);
   });
 
   test("supports multiple custom delimiters", () => {
-    expect(stringAdd("//[*][%]\n1*2%3")).toBe(6);
+    expect(add("//[*][%]\n1*2%3")).toBe(6);
   });
 
-  test("ignores non-numeric and blank tokens", () => {
-    expect(stringAdd("1,,2")).toBe(3);
+  test("supports multiple long custom delimiters", () => {
+    expect(add("//[***][%%]\n1***2%%3")).toBe(6);
   });
 
-  test("handles custom delimiters with special regex characters", () => {
-    expect(stringAdd("//[.*+?^${}()|[]\\]\n1.*+?^${}()|[]\\2")).toBe(3);
+  test("handles special regex characters in delimiters", () => {
+    expect(add("//[.*+?^${}()|[\\]]\n1.*+?^${}()|[\\]2")).toBe(3);
   });
 });

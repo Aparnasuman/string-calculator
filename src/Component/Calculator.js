@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { stringAdd } from "./StringCalculator";
+import { add } from "./StringCalculator";
 import "./Calculator.css";
 
 function Calculator() {
@@ -9,7 +9,7 @@ function Calculator() {
 
   const handleCalculate = () => {
     try {
-      const output = stringAdd(input);
+      const output = add(input);
       setResult(output);
       setError("");
     } catch (err) {
